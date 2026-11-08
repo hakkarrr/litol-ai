@@ -2,12 +2,17 @@
 
 $ErrorActionPreference = "Stop"
 
+# Allow script execution for current session
+try {
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
+} catch {}
+
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " Installing @litol-ai/cli for Windows   " -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
-# 1. Check if npm is installed
-$npmInstalled = Get-Command npm -ErrorAction SilentlyContinue
+# 1. Check if npm or node is installed
+$npmInstalled = (Get-Command npm -ErrorAction SilentlyContinue) -or (Get-Command node -ErrorAction SilentlyContinue)
 
 if (-not $npmInstalled) {
     Write-Host "`n[!] Node.js & npm not found." -ForegroundColor Yellow
@@ -27,19 +32,16 @@ if (-not $npmInstalled) {
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 }
 
-# 2. Check npm again after PATH refresh
-if (Get-Command npm -ErrorAction SilentlyContinue) {
-    Write-Host "`n[+] npm found. Installing @litol-ai/cli globally..." -ForegroundColor Green
-    npm install -g @litol-ai/cli
-    
+# 2. Run npm install via cmd.exe to bypass PowerShell's npm.ps1 execution policy block
+Write-Host "`n[+] Installing @litol-ai/cli globally..." -ForegroundColor Green
+cmd.exe /c "npm install -g @litol-ai/cli"
+
+if ($LASTEXITCODE -eq 0) {
     Write-Host "`n========================================" -ForegroundColor Green
     Write-Host " Installation Complete!" -ForegroundColor Green
-    Write-Host " Run: litol --help (or your CLI command)" -ForegroundColor White
+    Write-Host " You can now run: litol" -ForegroundColor White
     Write-Host "========================================" -ForegroundColor Green
 } else {
-    Write-Host "`n[NOTICE] Node.js was installed successfully!" -ForegroundColor Yellow
-    Write-Host "Please close and reopen your PowerShell window, then run:" -ForegroundColor Yellow
+    Write-Host "`n[NOTICE] Please restart your PowerShell window, then run:" -ForegroundColor Yellow
     Write-Host "    npm install -g @litol-ai/cli" -ForegroundColor Cyan
 }
-
-# hi
